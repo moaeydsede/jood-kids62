@@ -1,0 +1,55 @@
+{
+  "name": "JoodKids",
+  "short_name": "JoodKids",
+  "description": "متجر جملة ملابس أطفال",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#ffffff",
+  "theme_color": "#28B5F6",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "العروض",
+      "short_name": "العروض",
+      "url": "/?discount=1",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "السياسة",
+      "short_name": "السياسة",
+      "url": "/policy",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
