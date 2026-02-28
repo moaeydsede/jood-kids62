@@ -1,114 +1,66 @@
-import type { Product } from "@/lib/types";
-import type { CartItem as OrderCartItem } from "@/lib/types";
+// src/lib/cart.ts
 
+import type { CartItem } from "@/lib/types";
 
-export type CartItem = {
-  id: string;
-  title: string;
-  modelNumber: number;
-  price: number;
-  discountPrice?: number;
-  hasDiscount?: boolean;
-  qty: number;
-  imageUrl?: string;
-};
+const CART_KEY = "joodkids_cart";
 
-const KEY = "joodkids_cart_v1";
-
-export function readCart(): CartItem[] {
+export function loadCart(): CartItem[] {
   if (typeof window === "undefined") return [];
+
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
-    const data = JSON.parse(raw);
-    if (!Array.isArray(data)) return [];
-    return data.filter(Boolean);
+    const data = localStorage.getItem(CART_KEY);
+    return data ? JSON.parse(data) : [];
   } catch {
     return [];
   }
 }
 
-export function writeCart(items: CartItem[]) {
+export function saveCart(cart: CartItem[]) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(KEY, JSON.stringify(items));
-  window.dispatchEvent(new Event("cartChanged"));
-}
 
-export function loadCart(): OrderCartItem[] {
-  // Convert stored cart items to the lightweight CartItem used by orders/checkout
-  const items = readCart();
-  return items.map((i) => ({
-    productId: i.id,
-    title: i.title,
-    modelNumber: i.modelNumber,
-    price: itemUnitPrice(i),
-    qty: i.qty || 1,
-    image: i.imageUrl,
-  }));
-}
-
-export function saveCartForOrders(items: OrderCartItem[]) {
-  // Optional helper: overwrite cart from order-style items (not used currently)
-  const normalized = items.map((it) => ({
-    id: it.productId,
-    title: it.title,
-    modelNumber: it.modelNumber,
-    price: it.price,
-    qty: it.qty,
-    imageUrl: it.image,
-  })) as any;
-  writeCart(normalized);
-}
-
-
-export function cartCount(items: CartItem[]) {
-  return items.reduce((a, b) => a + (b.qty || 0), 0);
-}
-
-export function addToCart(product: Product, qty: number = 1) {
-  const items = readCart();
-  const idx = items.findIndex((i) => i.id === product.id);
-  const baseItem: CartItem = {
-    id: product.id,
-    title: product.title,
-    modelNumber: product.modelNumber,
-    price: product.price,
-    discountPrice: product.discountPrice,
-    hasDiscount: product.hasDiscount,
-    qty: Math.max(1, qty),
-    imageUrl: product.images?.[0]?.url,
-  };
-
-  if (idx >= 0) {
-    items[idx] = { ...items[idx], qty: (items[idx].qty || 1) + Math.max(1, qty) };
-  } else {
-    items.unshift(baseItem);
-  }
-  writeCart(items);
-}
-
-export function updateQty(id: string, qty: number) {
-  const items = readCart();
-  const next = items
-    .map((i) => (i.id === id ? { ...i, qty: Math.max(1, qty) } : i))
-    .filter((i) => i.qty > 0);
-  writeCart(next);
-}
-
-export function removeItem(id: string) {
-  const items = readCart().filter((i) => i.id !== id);
-  writeCart(items);
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
 }
 
 export function clearCart() {
-  writeCart([]);
+  if (typeof window === "undefined") return;
+
+  localStorage.removeItem(CART_KEY);
 }
 
-export function itemUnitPrice(i: CartItem) {
-  const d = !!i.hasDiscount && typeof i.discountPrice === "number" && i.discountPrice > 0 && i.discountPrice < i.price;
-  return d ? (i.discountPrice as number) : i.price;
+export function addToCart(item: CartItem) {
+  const cart = loadCart();
+
+  const existing = cart.find(
+    (i) => i.id === item.id && i.size === item.size
+  );
+
+  if (existing) {
+    existing.quantity += item.quantity;
+  } else {
+    cart.push(item);
+  }
+
+  saveCart(cart);
 }
 
-export function cartTotal(items: CartItem[]) {
-  return items.reduce((sum, i) => sum + itemUnitPrice(i) * (i.qty || 1), 0);
+export function removeFromCart(id: string, size: string) {
+  const cart = loadCart().filter(
+    (item) => !(item.id === id && item.size === size)
+  );
+
+  saveCart(cart);
+}
+
+export function updateQuantity(id: string, size: string, quantity: number) {
+  const cart = loadCart();
+
+  const item = cart.find(
+    (i) => i.id === id && i.size === size
+  );
+
+  if (item) {
+    item.quantity = quantity;
+  }
+
+  saveCart(cart);
 }
