@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid == "31ZskJ12hdNhy5D5lwP6dPB5Kw92";
+    }
+
+    match /seasons/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /products/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /orders/{id} {
+      // customers can create orders without auth
+      allow create: if true;
+
+      // allow customers to read a single order document by id (used in order-success page),
+      // but prevent listing all orders publicly.
+      allow get: if true;
+      allow list: if isAdmin();
+
+      // only admin can update/delete
+      allow update, delete: if isAdmin();
+    }
+
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
